@@ -1,0 +1,101 @@
+\documentclass[a4paper,12pt,twoside,french]{book}
+[a4paper,12pt,twoside]
+\usepackage[square, numbers, comma, sort&compress]{natbib} 
+%\addbibresource{biblio.bib} %Import the bibliography file
+
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\usepackage{adjustbox}
+\usepackage{graphicx} % to include image
+\usepackage{longtable}
+\usepackage{lscape}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinelanguage{json}{
+    stepnumber=1,
+    showstringspaces=false,
+    frame=lines,
+    string=[s]{"}{"},
+    comment=[l]{:\ "},
+    morecomment=[l]{:"},
+    literate=
+        *{0}{{{\color{numb}0}}}{1}
+         {1}{{{\color{numb}1}}}{1}
+         {2}{{{\color{numb}2}}}{1}
+         {3}{{{\color{numb}3}}}{1}
+         {4}{{{\color{numb}4}}}{1}
+         {5}{{{\color{numb}5}}}{1}
+         {6}{{{\color{numb}6}}}{1}
+         {7}{{{\color{numb}7}}}{1}
+         {8}{{{\color{numb}8}}}{1}
+         {9}{{{\color{numb}9}}}{1}
+}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\begin{document}
+
+\begin{lstlisting}[language=bash, caption=Commandes Docker]
+
+# Generate private key and public key to secure communication between the synchronization server and the mobile clients
+
+openssl genrsa -out privkey.pem 2048
+
+# The common name field must be the sync gateway FQDN or 10.0.2.2(Localhost) our a static IP adress for the sync gateway server
+# we use 10.0.2.2 as Common name or an static IP address of the sync gateway server 
+
+openssl req -new -x509 -sha256 -key privkey.pem -out cert.pem -days 1825
+
+# The below command create a cer file combining the two
+
+openssl x509 -inform PEM -in cert.pem -outform DER -out cert.cer
+
+# Docker commands
+
+docker pull couchbase/server 
+
+docker pull couchbase/sync-gateway 
+
+docker network create -d bridge cadapparnetwork
+
+docker network ls 
+
+docker run -d --name slave1 -v /Users/user/couchbase:/opt/couchbase/var --network cadapparnetwork couchbase/server
+
+docker run -d --name slave2 -v /Users/user/couchbase:/opt/couchbase/var --network cadapparnetwork couchbase/server
+
+docker run -d --name master -v /Users/user/couchbase:/opt/couchbase/var --network cadapparnetwork -p 8091:8091 —p 8092:8092 -p 8093:8093 -p 8094:8094 -p 8095:8095 -p 8096:8096 -p 11210:11210 —p 11211:11211 -p 18097:18097 -p 18096:18096 -p 18095:18095 -p 18094:18094 -p 18093:18093 -p 18092:18092 -p 18091:18091 -p 11280:11280 -p 11207:11207 couchbase/server
+
+docker run --hostname=629d02b92f2f --env=PATH=/usr/local/openjdk-8/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin --env=JAVA_HOME=/usr/local/openjdk-8 --env=LANG=C.UTF-8 --env=JAVA_VERSION=8u342 --network=bridge -p 9000:9000 -p 9443:9443 --restart=no --runtime=runc -d cadappar-server:latest
+
+docker run --hostname=174c2e0b6704 --user=sync_gateway --env=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/couchbase-sync-gateway/bin --volume=/Users/user/Documents/doctorat/Services/sync-gateway-config.json:/etc/sync_gateway/sync_gateway.json --volume=/Users/user/Documents/doctorat/Services/cert.pem:/etc/sync_gateway/ssl/cert.pem --volume=/Users/user/Documents/doctorat/Services/privkey.pem:/etc/sync_gateway/ssl/privkey.pem --volume=/var/log/sync_gateway --network=cadapparnetwork --workdir=/home/sync_gateway -p 4984:4984 -p 4985:4985 --restart=no --label='maintainer=docker@couchbase.com' --label='org.opencontainers.image.ref.name=ubuntu' --label='org.opencontainers.image.version=22.04' --runtime=runc -d couchbase/sync-gateway
+
+docker run --hostname=174c2e0b6704 --user=sync_gateway --env=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/couchbase-sync-gateway/bin --volume=/Users/user/Documents/doctorat/Services/sync-gateway-config.json:/etc/sync_gateway/sync_gateway.json --volume=/Users/user/Documents/doctorat/Services/cert.pem:/etc/sync_gateway/ssl/cert.pem --volume=/Users/user/Documents/doctorat/Services/privkey.pem:/etc/sync_gateway/ssl/privkey.pem --volume=/var/log/sync_gateway --network=cadapparnetwork --workdir=/home/sync_gateway -p 4984:4984 -p 4985:4985 --restart=no --label='maintainer=docker@couchbase.com' --label='org.opencontainers.image.ref.name=ubuntu' --label='org.opencontainers.image.version=22.04' --runtime=runc -d couchbase/sync-gateway
+
+\end{lstlisting}
+
+\end{document}
